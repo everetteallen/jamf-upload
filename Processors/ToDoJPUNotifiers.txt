@@ -1,0 +1,11 @@
+#EGA
+To do for SlackJPUNotifier and HangoutsChatJPUNotifier
+
+- function to take name of the summary_text from each jamfxxxxxUploader.py processor and safely import all variables listed in "report_fields" assigning them to unique variables for notification.  Example JamfPackageUploader puts out
+"report_fields": ["pkg_path", "pkg_name", "version", "category", "pkg_status", "pkg_date"]
+read as
+self.uploader_pkg_path = self.env.get("pkg_path")
+self.uploader_version = self.env.get("version")
+etc.
+
+This way we have unique information from each processor and can scale to notify if there are changes during different runs of the processors.
