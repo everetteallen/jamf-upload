@@ -4,8 +4,12 @@ To do for SlackJPUNotifier and HangoutsChatJPUNotifier
 - function to take name of the summary_text from each jamfxxxxxUploader.py processor and safely import all variables listed in "report_fields" assigning them to unique variables for notification.  Example JamfPackageUploader puts out
 "report_fields": ["pkg_path", "pkg_name", "version", "category", "pkg_status", "pkg_date"]
 read as
-self.uploader_pkg_path = self.env.get("pkg_path")
-self.uploader_version = self.env.get("version")
+self.jamfpackageuploader_pkg_path = self.env.get("pkg_path")
+self.jamfpackageuploader_uploader_version = self.env.get("version")
 etc.
 
 This way we have unique information from each processor and can scale to notify if there are changes during different runs of the processors.
+
+- experimental support for jamfxxxxuploader should always report?  How modular do we need this to be? Default is TRUE ??
+
+-- how generic do we make this?  Should we get the list of processors, attempt to import all their xxxx_summary_text structs and process all their report_fields??
