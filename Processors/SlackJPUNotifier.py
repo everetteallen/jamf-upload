@@ -48,67 +48,10 @@ class SlackJPUNotifier(Processor):
     output_variables = {}
 
     __doc__ = description
-
-    def main(self):
-        JSS_URL = self.env.get("JSS_URL")
-        webhook_url = self.env.get("slackjpu_webhook_url")
-        try:
-            should_report = self.env.get("slackjpu_should_report")
-        except:
-            should_report = False
-        
-        # JPU Summary
-        try:
-            jamfpackageuploader_summary_result = self.env.get("jamfpackageuploader_summary_result")
-            version = jamfpackageuploader_summary_result["data"]["version"]
-            category = jamfpackageuploader_summary_result["data"]["category"]
-            pkg_name = jamfpackageuploader_summary_result["data"]["pkg_name"]
-            pkg_path = jamfpackageuploader_summary_result["data"]["pkg_path"]
-            pkg_status = jamfpackageuploader_summary_result["data"]["pkg_status"]
-            pkg_date = jamfpackageuploader_summary_result["data"]["pkg_date"]
-            JPUTitle = "New Item Upload Attempt to JSS"
-            JPUIcon = ":star:"  
-
-        except:
-            pkg_status = "unknown"
-            version = "unknown"
-            category = "unknown"
-            pkg_name = "unknown"
-            pkg_path = "unknown"
-            pkg_date = "unknown"
-            pkg_status = "Error Processing Upload to JSS"
-            JPUTitle = "Error Running JamfPackageUploader"
-            JPUIcon = ":alarm_clock:"
-
-                 
-        # VirusTotal data if available
-        # set VIRUSTOTAL_ALWAYS_REPORT to true to report even if no new package
-        try:
-            virus_total_analyzer_summary_result = self.env.get("virus_total_analyzer_summary_result")
-            vtname = virus_total_analyzer_summary_result["data"]["name"]
-            ratio = virus_total_analyzer_summary_result["data"]["ratio"]
-            permalink = virus_total_analyzer_summary_result["data"]["permalink"]
-        except:
-            ratio = "Not Checked"
-        
-        # output so we can have sanity check
-        print("********SlackJPU Information Summary: ")
-        print("JSS address: %s" % JSS_URL)
-        print("Title: %s" % pkg_name)
-        print("Path: %s" % pkg_path)
-        print("Version: %s" % version)
-        print("Category: %s" % category) 
-        print("Status: %s" % pkg_status)
-        print("TimeStamp: %s" % pkg_date)    
-                
-        slack_text = (
-            f"*{JPUTitle}*\nURL:*{JSS_URL}*\n{JPUIcon} Title: *{pkg_name}*\nVersion: *{version}*\nCategory: *{category}*\nStatus: *{pkg_status}*\nVirus Total Result: *{ratio}*\nTimeStamp:*{pkg_date}*\n"
-        )
-
-        slack_data = {"text": slack_text}
-        
-        # Only report if there are changes to the package or if slackjpu_should_report is set to true
-        if not ("Unchanged" in pkg_status) or should_report:
+    
+    def slack_post(self, slack_data, notifiy_status):
+                # Only report if there are changes to the package or if slackjpu_should_report is set to true
+        if notify_status or should_report:
 
             response = requests.post(webhook_url, json=slack_data)
             if response.status_code != 200:
@@ -116,6 +59,85 @@ class SlackJPUNotifier(Processor):
                     f"Request to slack returned an error {response.status_code}, "
                     "the response is:\n{response.text}"
                 )
+        return    
+
+    def main(self):
+        JSS_URL = self.env.get("JSS_URL")
+        webhook_url = self.env.get("slackjpu_webhook_url")
+        JPUTitle = "New Item Upload Attempt to JSS"
+        JPUIcon = ":star:" 
+        
+        # Don't notify unless there is something to report or set to always report
+        try:
+            should_report = self.env.get("slackjpu_should_report")
+        except:
+            should_report = False
+        
+        # Get jamfpackageuploader Summary if exists
+        try:
+            jamfpackageuploader_summary_result = self.env.get("jamfpackageuploader_summary_result")
+            jamfpackageuploader_version = jamfpackageuploader_summary_result["data"]["version"]
+            jamfpackageuploader_category = jamfpackageuploader_summary_result["data"]["category"]
+            jamfpackageuploader_pkg_name = jamfpackageuploader_summary_result["data"]["pkg_name"]
+            jamfpackageuploader_pkg_path = jamfpackageuploader_summary_result["data"]["pkg_path"]
+            jamfpackageuploader_pkg_status = jamfpackageuploader_summary_result["data"]["pkg_status"]
+            jamfpackageuploader_pkg_date = jamfpackageuploader_summary_result["data"]["pkg_date"]
+            notify_status = True 
+        except:
+            jamfpackageuploader_pkg_status = "Error Processing Upload to JSS"
+            JPUTitle = "Error Running JamfPackageUploader"
+            JPUIcon = ":alarm_clock:"
+            jamfpackageuploader_version = jamfpackageuploader_pkg_name = jamfpackageuploader_pkg_path = jamfpackageuploader_pkg_date = "Unknown"
+                 
+        # VirusTotal data if available
+        # set VIRUSTOTAL_ALWAYS_REPORT to true to report
+        try:
+            virus_total_analyzer_summary_result = self.env.get("virus_total_analyzer_summary_result")
+            virus_total_analyzer_vtname = virus_total_analyzer_summary_result["data"]["name"]
+            virus_total_analyzer_ratio = virus_total_analyzer_summary_result["data"]["ratio"]
+            virus_total_analyzer_permalink = virus_total_analyzer_summary_result["data"]["permalink"]
+        except:
+            ratio = "Not Checked"   
+        
+        slack_text = (
+            f"*{JPUTitle}* on URL:*{JSS_URL}*\n{JPUIcon} Title: *{jamfpackageuploader_pkg_name}* at Version: *{jamfpackageuploader_version}* in Category: *{jamfpackageuploader_category}*\n Has Status: *{jamfpackageuploader_pkg_status}*\nVirus Total Result: *{virus_total_analyzer_ratio}*\nTimeStamp:*{jamfpackageuploader_pkg_date}*\n"
+        )
+        
+        self.slack_post(slack_text, notify_status)
+        
+
+        # jamfcategoryuploader summary if available
+        notify_status = False
+        try:
+            jamfcategoryuploader_summary_result = self.env.get("jamfcategoryuploader_summary_result")
+            jamfcategoryuploader_category = jamfcategoryuploader_summary_result["data"]["category"]
+            jamfcategoryuploader_priority = jamfcategoryuploader_summary_result["data"]["priority"]
+            notify_status = True
+        except:
+            JPUTitle = "Error Running JamfCategoryUploader"
+            JPUIcon = ":alarm_clock:"        
+            jamfcategoryuploader_category = jamfcategoryuploader_priority = "Unknown"
+        
+        slack_text = (
+            f"*{JPUTitle}* on URL:*{JSS_URL}*\n{JPUIcon} Category: *{jamfcategoryuploader_category}* With Priority: *{jamfcategoryuploader_priority}*\n"
+        )
+
+        slack_data = {"text": slack_text}
+        self.slack_post(slack_text, notify_status)
+        
+        # add block for each processor until we can figure out how to loop over the processor list EGA
+        
+        # jamfcomputergroupuploader summary if available
+        
+        # jamfextensionattributeuploader summary if available
+        
+        # jamfpolicyuploader summary if available
+        
+        # jamfscriptuploadersummary if available
+        
+        # jamfxxxxuploader summary when available
+        
+
 
 
 if __name__ == "__main__":
