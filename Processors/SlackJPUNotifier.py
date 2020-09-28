@@ -52,9 +52,8 @@ class SlackJPUNotifier(Processor):
     __doc__ = description
     
     def slack_post(self, slack_data, notifiy_status):
-                # Only report if there are changes to the package or if slackjpu_should_report is set to true
+        # Only report if there are changes to the package or if slackjpu_should_report is set to true
         if notify_status or should_report:
-
             response = requests.post(webhook_url, json=slack_data)
             if response.status_code != 200:
                 raise ValueError(
@@ -88,10 +87,10 @@ class SlackJPUNotifier(Processor):
             jamfpackageuploader_pkg_date = jamfpackageuploader_summary_result["data"]["pkg_date"]
             notify_status = True 
         except:
-            jamfpackageuploader_pkg_status = "Error Processing Upload Summary"
+            jamfpackageuploader_pkg_status = "Error Processing Package Upload Summary"
             JPUTitle = "JamfPackageUploader Summary Unavailable"
             JPUIcon = ":alarm_clock:"
-            jamfpackageuploader_version = jamfpackageuploader_pkg_name = jamfpackageuploader_pkg_path = jamfpackageuploader_pkg_date = "Unknown"
+            jamfpackageuploader_version = jamfpackageuploader_category = jamfpackageuploader_pkg_name = jamfpackageuploader_pkg_path = jamfpackageuploader_pkg_status = jamfpackageuploader_pkg_date = "Unknown"
                  
         # VirusTotal data if available
         # set VIRUSTOTAL_ALWAYS_REPORT to true to report
