@@ -103,7 +103,7 @@ class SlackJPUNotifier(Processor):
             ratio = "Unavailable"   
         
         slack_text = (
-            f"*{JPUTitle}* on URL:*{JSS_URL}*\n*{JPUIcon}* Title: *{jamfpackageuploader_pkg_name}* at Version: *{jamfpackageuploader_version}* in Category: *{jamfpackageuploader_category}*\n Has Status: *{jamfpackageuploader_pkg_status}*\nVirus Total Result: *{virus_total_analyzer_ratio}*\nTimeStamp:*{jamfpackageuploader_pkg_date}*\n"
+            f"*{JPUTitle}* on URL:*{JSS_URL}*\n*{JPUIcon}* Title: *{jamfpackageuploader_pkg_name}* at Version: *{jamfpackageuploader_version}* in Category: *{jamfpackageuploader_category}* Has Status: *{jamfpackageuploader_pkg_status}*\nVirus Total Result: *{virus_total_analyzer_ratio}*\nTimeStamp:*{jamfpackageuploader_pkg_date}*\n"
         )
         
         self.slack_post(slack_text, notify_status)
